@@ -1,6 +1,6 @@
 # nodeapp
 Simple nodejs application
 
-== Instalacion
+Comandos de instalación:
 npm install express
 npm install mysql
