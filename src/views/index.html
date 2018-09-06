@@ -1,0 +1,88 @@
+<html>
+  <head>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Mi app de productos</h1>
+      <div class="row">
+        <div class="col-md-4">
+          <!--Asigno un id="nombre" a la caja de texto -->
+          Nombre <input class="form-control" id="nombre"/><br>
+          <!--Asigno un id="precio" a la caja de texto -->
+          Precio <input type="number" class="form-control" id="precio"/><br>
+          <!--Asigno un evento saveProduct al boton -->
+          <button class="btn btn-success btn-block" onclick="saveProduct();">Guardar</button>
+        </div>
+      </div>
+      <div class="row">
+        <hr/>
+        <table class="table">
+          <thead>
+            <tr class="text-center">
+              <th>ID</th>
+              <th>NOMBRE</th>
+              <th>PRECIO</th>
+            </tr>
+          </thead>
+          <tbody id="productResult"></tbody>
+        </table>
+      </div>
+    </div>
+  </body>
+  <script>
+    // Funcion para guardar productos
+    var saveProduct = () => {
+      var name = $("#nombre").val(); //$("#id") donde id es el identificador que se le coloca a la etiqueta HTML
+      var price = $("#precio").val(); //$("#id") donde id es el identificador que se le coloca a la etiqueta HTML
+      if(name == "" || price == ""){ //Verificar si los campos estan vacios
+        alert("Todos los campos son obligatorios"); //Responder un mensaje para el usuario
+        return false; //Abortar la ejecucion de la funcion si no cumple nuestros requisitos
+      }
+      $.get("product/save/"+name+"/"+price, null, (response) => {
+        if(response){
+          if(response.insert){
+            loadProducts(); //Cargar productos si se inserto correctamente
+            alert("Insertado correctamente!"); //Responder un mensaje para el usuario
+          }else{
+            alert("Oops intenta mas tarde!"); //Responder un mensaje para el usuario
+          }
+        }
+      });
+    };
+    // Funcion para cargar productos
+    var loadProducts = () => {
+      /**
+       * Funcion AJAX para ir a la URL http://server/product/get
+       */
+      $.getJSON("product/get", null, (response) => {
+        if(response){ //Si la respuesta esta correcta
+          $("#productResult").html(""); //Limpio el tbody de la tabla
+          for(i=0; i<response.length; i++){
+            //Concateno la fila de la tabla con los datos
+            strRow = "<tr>";
+            strRow+= "<td>"+response[i].id+"</td>";
+            strRow+= "<td>"+response[i].name+"</td>";
+            strRow+= "<td>"+response[i].price+"</td>";
+            strRow+= "</tr>";
+            //Imprimo cada fila generada en la tabla
+            $("#productResult").append(strRow);
+          }
+        }else{
+          //Muestro un mensaje en la tabla que no se pudieron encontrar datos
+          $("#productResult").html("<tr class='text-center'><td colspan='3'>No se pudo cargar los datos</td></tr>")
+        }
+      });
+    };
+    $(document).ready(()=>{
+      //Cargar productos
+      loadProducts();
+    });
+  </script>
+</html>
