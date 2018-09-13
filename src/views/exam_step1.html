@@ -1,0 +1,109 @@
+<html>
+  <head>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Crear Examen</h1>
+      <div class="row">
+        <div class="col-md-6">
+          Fecha: <input type="date" class="form-control" id="date">
+          Empresa: <select class="form-control" id="companies"></select>
+          <button class="btn btn-success" onclick="guardar();">Crear</button>
+        </div>
+      </div>
+      <div class="row">
+        <hr/>
+      </div>
+      <div class="row">
+        <div class="col-md-4">
+        ID EXAMEN <input type="text" id="exam_id" class="form-control">
+        </div>
+      </div>
+      <div class="row">
+        <br>
+        <div class="col-md-10">
+          <table class="table table-bordered">
+            <thead>
+              <tr><th>ID</th><th>PREGUNTA</th><th>RESPUESTA</th></tr>
+            </thead>
+            <tbody id="question_list"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="row">
+          <br>
+          <div class="col-md-10">
+            <button class="btn btn-success btn-block" onclick="enviar_preguntas();">GUARDAR</button>
+          </div>
+      </div>
+    </div>
+  </body>
+  <script>
+    function guardar(){
+      date = $("#date").val();
+      company = $("#companies").val();
+      if(date == "" || company == "0"){
+        alert("Debes seleccionar una fecha y una empresa");
+        return false;
+      }
+      data = {date: date, company: company};
+      $.post("/exam/create", data, function(response){
+        if(response.insertID > 0){
+          alert("Insertado correctamente, su ID de examen es "+response.insertID);
+          $("#exam_id").val(response.insertID);
+        }else{
+          alert("Hubo un error, Oops intente mas tarde");
+        }
+      });
+    }
+    function enviar_preguntas(){
+      exam_id = $("#exam_id").val();
+      if(exam_id == ""){ alert("Debes ingresar un ID de examen"); return false; }
+      exam_answer = [];
+      for(j=0; j < IDS.length; j++){
+        var current_id = IDS[j];
+        answer = $("#answer_"+current_id).val();
+        exam_answer.push({exam: exam_id, question: current_id, result: answer});
+      }
+      data = {data: JSON.stringify(exam_answer)};
+      $.post("/exam/answer", data, function(response){
+        if(response.result == 1){
+          alert("resultados asignados correctamente");
+        }else{
+          alert("Hubo un error, Oops intente mas tarde");
+        }
+      });
+    };
+    $(document).ready(function(){
+      $.get("/companies", function(response){
+        $("#companies").html();
+        $("#companies").append("<option value='0'>Seleccione</option>");
+        for(i=0; i<response.length; i++){
+          $("#companies").append("<option value='"+response[i].id+"'>"+response[i].name+"</option>");
+        }
+      });
+      IDS = [];
+      $.get("/questions", function(response){
+        $("#question_list").html();
+        select_template = "<select id='answer_:id' class='form-control'><option value='-1'>N/A</option><option value='0'>NO</option><option value='1'>SI</option></select>";
+        for(i=0; i<response.length; i++){
+          IDS.push(response[i].id);
+          question_select = select_template.replace(":id", response[i].id);
+          tr = "<tr>";
+          tr+= "<td>"+response[i].id+"</td>";
+          tr+= "<td>"+response[i].description+"</td>";
+          tr+= "<td>"+question_select+"</td>";
+          tr+= "</tr>";
+          $("#question_list").append(tr);
+        }
+      });
+    });
+  </script>
+</html>
